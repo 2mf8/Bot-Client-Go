@@ -1,4 +1,4 @@
-module wsclient
+module github.com/2mf8/Bot-Client-Go
 
 go 1.23.4
 

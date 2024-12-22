@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-	"wsclient/safe_ws"
+	"github.com/2mf8/Bot-Client-Go/safe_ws"
 
 	bot "github.com/2mf8/Better-Bot-Go"
 	"github.com/2mf8/Better-Bot-Go/dto"
