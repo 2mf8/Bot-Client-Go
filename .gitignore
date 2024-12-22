@@ -1,0 +1,6 @@
+*.toml
+*.json
+*.exe
+competition/
+logs/
+keyboard/
