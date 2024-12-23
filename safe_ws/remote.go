@@ -34,17 +34,16 @@ var (
 	FirstStart bool = true
 )
 
-func ConnectUniversal() {
+func ConnectUniversal(appid, serverUrl string) {
 	for {
-		serverUrl := "wss://2mf8.cn:8443/websocket"
 		header := http.Header{}
-
+		header.Add("x-bot-self-id", appid)
 		conn, _, err := websocket.DefaultDialer.Dial(serverUrl, header)
 		fmt.Println(err)
 		if err != nil {
 			log.Warnf("连接Websocket服务器 %s 错误，5秒后重连", serverUrl)
 			time.Sleep(5 * time.Second)
-			ConnectUniversal()
+			ConnectUniversal(appid, serverUrl)
 		} else {
 			log.Infof("连接Websocket服务器成功 %s", serverUrl)
 			closeChan := make(chan int, 1)
