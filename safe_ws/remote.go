@@ -43,7 +43,7 @@ func ConnectUniversal(appid, serverUrl string) {
 		if err != nil {
 			log.Warnf("连接Websocket服务器 %s 错误，5秒后重连", serverUrl)
 			time.Sleep(5 * time.Second)
-			ConnectUniversal(appid, serverUrl)
+			continue
 		} else {
 			log.Infof("连接Websocket服务器成功 %s", serverUrl)
 			closeChan := make(chan int, 1)
