@@ -3,7 +3,7 @@ module github.com/2mf8/Bot-Client-Go
 go 1.23.4
 
 require (
-	github.com/2mf8/Better-Bot-Go v0.0.3-0.20241223143722-b5cdc05dee21
+	github.com/2mf8/Better-Bot-Go v0.0.4-0.20241229111935-3fcb6f0d23d3
 	github.com/fanliao/go-promise v0.0.0-20141029170127-1890db352a72
 	github.com/gorilla/websocket v1.5.3
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible

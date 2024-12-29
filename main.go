@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"github.com/2mf8/Bot-Client-Go/safe_ws"
 
 	bot "github.com/2mf8/Better-Bot-Go"
+	bytesimage "github.com/2mf8/Better-Bot-Go/bytes_image"
 	"github.com/2mf8/Better-Bot-Go/dto"
 	"github.com/2mf8/Better-Bot-Go/dto/keyboard"
 	"github.com/2mf8/Better-Bot-Go/openapi"
@@ -26,14 +28,34 @@ func main() {
 	for i, v := range as.Apps {
 		go safe_ws.ConnectUniversal(fmt.Sprintf("%v", v.AppId), v.WSSAddr)
 		token := token.BotToken(v.AppId, v.Token, string(token.TypeBot))
-		api := bot.NewSandboxOpenAPI(token).WithTimeout(3 * time.Second)
+		api := bot.NewOpenAPI(token).WithTimeout(3 * time.Second)
 		Apis[i] = api
 	}
 	b, _ := json.Marshal(as)
 	fmt.Println("配置", string(b))
 	safe_ws.GroupAtMessageEventHandler = func(appid string, event *dto.WSPayload, data *dto.WSGroupATMessageData) error {
+		ctx := context.WithValue(context.Background(), "key", "value")
 		content := strings.TrimSpace(data.Content)
-		log.Info(data.Content, data.GroupId, " -",content)
+		log.Info(data.Content, data.GroupId, " <- ", content)
+		if content == "base" {
+			s, err := bytesimage.GetImageBytes("http://2mf8.cn:2014/view/333.png?scramble=R")
+			fmt.Println(string(s))
+			if err == nil {
+				resp, err := Apis[appid].PostGroupRichMediaMessage(ctx, data.GroupId, &dto.GroupRichMediaMessageToCreate{FileType: 1, FileData: s, SrvSendMsg: false})
+				fmt.Println(err)
+				if resp != nil {
+					newMsg := &dto.GroupMessageToCreate{
+						Media: &dto.FileInfo{
+							FileInfo: resp.FileInfo,
+						},
+						MsgID:   data.MsgId,
+						MsgType: 7,
+						MsgReq:  1,
+					}
+					Apis[appid].PostGroupMessage(ctx, data.GroupId, newMsg)
+				}
+			}
+		}
 		if content == "kb" {
 			ctx := context.WithValue(context.Background(), "key", "value")
 			/* rows := keyboard.CustomKeyboard{} */
@@ -58,7 +80,7 @@ func main() {
 	}
 	safe_ws.C2CMessageEventHandler = func(appid string, event *dto.WSPayload, data *dto.WSC2CMessageData) error {
 		content := strings.TrimSpace(data.Content)
-		log.Info(data.Content, data.Author.UserOpenId, " -",content)
+		log.Info(data.Content, data.Author.UserOpenId, " -", content)
 		if content == "kb" {
 			ctx := context.WithValue(context.Background(), "key", "value")
 			/* rows := keyboard.CustomKeyboard{} */
@@ -71,6 +93,20 @@ func main() {
 			b, _:= json.Marshal(kb)
 			json.Unmarshal(b, &rows) */
 			fmt.Println("测试")
+			s, err := bytesimage.GetImageBytes("http://2mf8.cn:2014/view/333.png?scramble=R")
+			resp, err := Apis[appid].PostC2CRichMediaMessage(ctx, data.Author.UserOpenId, &dto.GroupRichMediaMessageToCreate{FileType: 1, FileData: s, SrvSendMsg: false})
+			fmt.Println(err)
+			if resp != nil {
+				newMsg := &dto.C2CMessageToCreate{
+					Media: &dto.FileInfo{
+						FileInfo: resp.FileInfo,
+					},
+					MsgID:   data.Id,
+					MsgType: dto.C2CMsgTypeMedia,
+					MsgReq:  1,
+				}
+				Apis[appid].PostC2CMessage(ctx, data.Author.UserOpenId, newMsg)
+			}
 			Apis[appid].PostC2CMessage(ctx, data.Author.UserOpenId, &dto.C2CMessageToCreate{
 				Keyboard: &keyboard.MessageKeyboard{
 					ID: "101981675_1735044770",
@@ -82,17 +118,12 @@ func main() {
 		return nil
 	}
 	safe_ws.MessageEventHandler = func(appid string, event *dto.WSPayload, data *dto.WSMessageData) error {
-		if data.Content == "k" {
-			ctx := context.WithValue(context.Background(), "key", "value")
-			Apis[appid].PostMessage(ctx, data.ChannelID, &dto.MessageToCreate{
-				Markdown: &dto.Markdown{
-					CustomTemplateId: "101981675_1735049881",
-				},
-				Keyboard: &keyboard.MessageKeyboard{
-					ID: "101981675_1735044770",
-				},
-			})
-		}
+		s, _ := bytesimage.GetImageBytes("./333.png")
+		_, e := Apis[appid].PostFormFileReaderImage(context.Background(), data.ChannelID, map[string]string{
+			"msg_id": data.ID,
+			"content": "333.png",
+		}, "333.png", bytes.NewBuffer(s))
+		fmt.Println(e)
 		return nil
 	}
 	safe_ws.InteractionEventHandler = func(appid string, event *dto.WSPayload, data *dto.WSInteractionData) error {
