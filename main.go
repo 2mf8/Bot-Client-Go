@@ -120,7 +120,7 @@ func main() {
 	safe_ws.MessageEventHandler = func(appid string, event *dto.WSPayload, data *dto.WSMessageData) error {
 		s, _ := bytesimage.GetImageBytes("./333.png")
 		_, e := Apis[appid].PostFormFileReaderImage(context.Background(), data.ChannelID, map[string]string{
-			"msg_id": data.ID,
+			"msg_id":  data.ID,
 			"content": "333.png",
 		}, "333.png", bytes.NewBuffer(s))
 		fmt.Println(e)
@@ -133,6 +133,22 @@ func main() {
 				Content: "测试",
 				MsgID: data.ID,
 			}) */
+		return nil
+	}
+	safe_ws.FriendAddEventHandler = func(appid string, event *dto.WSPayload, data *dto.WSFriendAddData) error {
+		Apis[appid].PostC2CMessage(context.Background(), data.OpenId, &dto.C2CMessageToCreate{
+			Content: "hello",
+			EventID: dto.EventType(event.ID),
+		})
+		return nil
+	}
+	safe_ws.GroupAddRobotEventHandler = func(appid string, event *dto.WSPayload, data *dto.WSGroupAddRobotData) error {
+		fmt.Println(data.GroupOpenId, data.OpMemberOpenId, data.Timestamp)
+		m, e := Apis[appid].PostGroupMessage(context.Background(), data.GroupOpenId, &dto.C2CMessageToCreate{
+			Content: "hello",
+			EventID: dto.EventType(event.ID),
+		})
+		fmt.Println(m,e)
 		return nil
 	}
 	select {}
