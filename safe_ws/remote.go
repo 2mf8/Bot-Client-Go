@@ -50,6 +50,49 @@ func ConnectUniversal(appid, serverUrl string) {
 			safeWs := NewSafeWebSocket(conn, func(ws *SafeWebSocket, messageType int, data []byte) {
 				rm := onebot.Frame{}
 				json.Unmarshal(data, &rm)
+				fmt.Println(string(data))
+				if FirstStart {
+					NewBot(rm.BotId, rm.Payload, rm.Data)
+					FirstStart = false
+				}
+				NewBot(rm.BotId, rm.Payload, rm.Data)
+			}, func() {
+				defer func() {
+					_ = recover() // 可能多次触发
+				}()
+				closeChan <- 1
+			})
+			SafeGo(func() {
+				if err := safeWs.Send(websocket.PingMessage, []byte("ping")); err != nil {
+				}
+				time.Sleep(5 * time.Second)
+			})
+			<-closeChan
+			close(closeChan)
+			log.Warnf("Websocket 服务器 %s 已断开，5秒后重连", serverUrl)
+			time.Sleep(5 * time.Second)
+		}
+	}
+}
+
+func ConnectUniversalWithSecret(appid, secret, serverUrl string) {
+	for {
+		header := http.Header{}
+		header.Add("x-bot-self-id", appid)
+		header.Add("x-bot-secret", secret)
+		conn, _, err := websocket.DefaultDialer.Dial(serverUrl, header)
+		fmt.Println(err)
+		if err != nil {
+			log.Warnf("连接Websocket服务器 %s 错误，5秒后重连", serverUrl)
+			time.Sleep(5 * time.Second)
+			continue
+		} else {
+			log.Infof("连接Websocket服务器成功 %s", serverUrl)
+			closeChan := make(chan int, 1)
+			safeWs := NewSafeWebSocket(conn, func(ws *SafeWebSocket, messageType int, data []byte) {
+				rm := onebot.Frame{}
+				json.Unmarshal(data, &rm)
+				fmt.Println(string(data))
 				if FirstStart {
 					NewBot(rm.BotId, rm.Payload, rm.Data)
 					FirstStart = false

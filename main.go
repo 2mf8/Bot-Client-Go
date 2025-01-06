@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -26,17 +25,30 @@ func main() {
 	safe_ws.InitLog()
 	as := webhook.ReadSetting()
 	for i, v := range as.Apps {
-		go safe_ws.ConnectUniversal(fmt.Sprintf("%v", v.AppId), v.WSSAddr)
+		fmt.Println(as.IsOpen, i)
+		if as.IsOpen {
+			go safe_ws.ConnectUniversalWithSecret(fmt.Sprintf("%v", v.AppId), v.AppSecret, v.WSSAddr)
+		} else {
+			go safe_ws.ConnectUniversal(fmt.Sprintf("%v", v.AppId), v.WSSAddr)
+		}
 		token := token.BotToken(v.AppId, v.Token, string(token.TypeBot))
-		api := bot.NewOpenAPI(token).WithTimeout(3 * time.Second)
+		api := bot.NewSandboxOpenAPI(token).WithTimeout(3 * time.Second)
 		Apis[i] = api
 	}
-	b, _ := json.Marshal(as)
-	fmt.Println("配置", string(b))
+	/* b, _ := json.Marshal(as)
+	fmt.Println("配置", string(b)) */
 	safe_ws.GroupAtMessageEventHandler = func(appid string, event *dto.WSPayload, data *dto.WSGroupATMessageData) error {
 		ctx := context.WithValue(context.Background(), "key", "value")
 		content := strings.TrimSpace(data.Content)
 		log.Info(data.Content, data.GroupId, " <- ", content)
+		if content == "测试" {
+			newMsg := &dto.GroupMessageToCreate{
+				Content: "测试多处WSS发消息成功",
+				MsgType: dto.C2CMsgTypeText,
+				MsgReq:  4,
+			}
+			Apis[appid].PostGroupMessage(ctx, data.GroupId, newMsg)
+		}
 		if content == "base" {
 			s, err := bytesimage.GetImageBytes("http://2mf8.cn:2014/view/333.png?scramble=R")
 			fmt.Println(string(s))
@@ -118,6 +130,11 @@ func main() {
 		return nil
 	}
 	safe_ws.MessageEventHandler = func(appid string, event *dto.WSPayload, data *dto.WSMessageData) error {
+		Apis[appid].PostMessage(context.Background(), data.ChannelID, &dto.MessageToCreate{
+			Markdown: &dto.Markdown{
+				CustomTemplateId: "101981675_1735738039",
+			},
+		})
 		s, _ := bytesimage.GetImageBytes("./333.png")
 		_, e := Apis[appid].PostFormFileReaderImage(context.Background(), data.ChannelID, map[string]string{
 			"msg_id":  data.ID,
@@ -148,7 +165,7 @@ func main() {
 			Content: "hello",
 			EventID: dto.EventType(event.ID),
 		})
-		fmt.Println(m,e)
+		fmt.Println(m, e)
 		return nil
 	}
 	select {}
