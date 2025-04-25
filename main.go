@@ -76,6 +76,111 @@ func main() {
 				}
 			}
 		}
+		if content == "ark" {
+			/* msg := dto.Ark{
+				TemplateID: 23,
+				KV: []*dto.ArkKV{
+					&dto.ArkKV{
+						Key:   "#DESC#",
+						Value: "描述",
+					},
+					&dto.ArkKV{
+						Key:   "#PROMPT#",
+						Value: "提示消息",
+					},
+					&dto.ArkKV{
+						Key: "#LIST#",
+						Obj: []*dto.ArkObj{
+							{
+								ObjKV: []*dto.ArkObjKV{
+									{
+										Key:   "desc",
+										Value: "测试",
+									},
+								},
+							},
+							{
+								ObjKV: []*dto.ArkObjKV{
+									{
+										Key:   "desc",
+										Value: "爱魔方吧",
+									},
+									{
+										Key:   "link",
+										Value: "https://www.2mf8.cn/tag/",
+
+									},
+								},
+
+							},
+						},
+					},
+				},
+			} */
+			/* msg := dto.Ark{
+				TemplateID: 24,
+				KV:         []*dto.ArkKV{
+					{
+						Key:   "#DESC#",
+						Value: "描述",
+					},
+					{
+						Key:   "#PROMPT#",
+						Value: "通知消息",
+					},
+					{
+						Key:   "#TITLE#",
+						Value: "标题",
+					},
+					{
+						Key:   "#METADESC#",
+						Value: "Meta描述",
+					},
+					{
+						Key:   "#IMG#",
+						Value: "https://pub.idqqimg.com/pc/misc/files/20190820/2f4e70ae3355ece23d161cf5334d4fc1jzjfmtep.png",
+					},
+					{
+						Key:   "#LINK#",
+						Value: "https://www.2mf8.cn/tag/",
+					},
+					{
+						Key:   "#SUBTITLE#",
+						Value: "子标题",
+					},
+				},
+			} */
+			msg := dto.Ark{
+				TemplateID: 37,
+				KV: []*dto.ArkKV{
+					{
+						Key:   "#PROMPT#",
+						Value: "通知提醒",
+					},
+					{
+						Key:   "#METATITLE#",
+						Value: "标题",
+					},
+					{
+						Key:   "#METASUBTITLE#",
+						Value: "子标题",
+					},
+					{
+						Key: "#METACOVER#",
+						Value: "https://vfiles.gtimg.cn/vupload/20211029/bf0ed01635493790634.jpg",
+					},
+					/* {
+						Key:   "#LINK#",
+						Value: "https://www.2mf8.cn/tag/",
+					}, */
+				},
+			}
+			bot.SendApi(appid).PostGroupMessage(context.Background(), data.GroupId, &dto.C2CMessageToCreate{
+				Ark:     &msg,
+				MsgID:   data.MsgId,
+				MsgType: dto.C2CMsgTypeArk,
+			})
+		}
 		return nil
 	}
 	safe_ws.FriendAddEventHandler = func(appid string, event *dto.WSPayload, data *dto.WSFriendAddData) error {
